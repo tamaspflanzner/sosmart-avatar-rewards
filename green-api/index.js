@@ -6,6 +6,7 @@ const { z } = require("zod");
 const { ethers } = require("ethers");
 const fs = require("fs");
 const db = require("./db");
+const { sqlLimit } = require("./lib/sqlLimit");
 
 const app = express();
 app.use(cors());
@@ -13,13 +14,6 @@ app.use(express.json());
 
 const PORT = Number(process.env.PORT || 4100);
 
-app.get("/health", (_req, res) => {
-  res.status(200).json({
-    ok: true,
-    service: "green-api",
-    time: new Date().toISOString(),
-  });
-});
 
 // ----------------------------------------------------
 // CONFIG / CONSTANTS
@@ -1165,8 +1159,9 @@ const ClaimCreateSchema = z.object({
 // DB / COMPUTE HELPERS
 // ----------------------------------------------------
 async function pingDb() {
-  const rows = await q("SELECT 1 AS ok");
-  return rows?.[0]?.ok === 1;
+  // Check that the core schema is available, even when there are no events yet.
+  await q("SELECT id FROM events LIMIT 0");
+  return true;
 }
 
 async function insertEventToDb(body) {
@@ -1199,7 +1194,7 @@ async function insertEventToDb(body) {
 }
 
 async function getRecentEvents(limit = 50) {
-  const l = clamp(Number(limit || 50), 1, 200);
+  const l = sqlLimit(limit, 50, 200);
   const rows = await q(
     `
     SELECT id, event_id, wallet_address, trip_type, distance_km, route_id, stop_id, source, event_ts_ms, event_time, created_at
@@ -4757,7 +4752,7 @@ app.post("/api/claims/:id/sign", async (req, res) => {
 // list all claims (admin/demo)
 app.get("/api/claims", async (req, res) => {
   try {
-    const limit = clamp(Number(req.query.limit || 100), 1, 500);
+    const limit = sqlLimit(req.query.limit, 100, 500);
 
     const rows = await q(
       `
@@ -5916,7 +5911,7 @@ app.get("/api/users/:wallet/notifications", async (req, res) => {
     if (!wallet || wallet.length < 6) {
       return res.status(400).json({ error: "invalid wallet param" });
     }
-    const limit = Math.min(50, Math.max(1, Number(req.query.limit || 20)));
+    const limit = sqlLimit(req.query.limit, 20, 50);
     const rows = await q(
       `SELECT id, type, title, body, ref_type, ref_id, is_read, created_at
        FROM notifications
