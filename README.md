@@ -8,12 +8,12 @@ A sosmart module built from Green Commute: transport events produce rewards, use
 
 | Directory | Purpose | Stack |
 | --- | --- | --- |
-| green-dapp | User interface and wallet integration | Next.js 16.1.6, React 19.2.3, Tailwind 4, wagmi, viem, TanStack Query, optional Alchemy Account Kit |
-| green-api | Events, rewards, social features, SQL persistence, chain verification | Node.js, Express 5, mysql2, Zod, ethers 6 |
-| green-erc | Reward and cosmetic contracts | Solidity 0.8.24, Hardhat 2.26.3, OpenZeppelin 5.0.2, ethers 5 |
-| green-dummy | Controls synthetic commute events | Next.js and React |
+| web | User interface and wallet integration | Next.js 16.1.6, React 19.2.3, Tailwind 4, wagmi, viem, TanStack Query, optional Alchemy Account Kit |
+| api | Events, rewards, social features, SQL persistence, chain verification | Node.js, Express 5, mysql2, Zod, ethers 6 |
+| contracts | Reward and cosmetic contracts | Solidity 0.8.24, Hardhat 2.26.3, OpenZeppelin 5.0.2, ethers 5 |
+| simulator | Controls synthetic commute events | Next.js and React |
 
-Keep these directory names: the contract deployment catalog reads assets from green-dapp. Each component has its own package-lock.json; there is no root npm workspace.
+Keep these directory names: the contract deployment catalog reads assets from web. Each component has its own package-lock.json; there is no root npm workspace.
 
 ## Local setup
 
@@ -22,17 +22,17 @@ The source snapshot was exercised with Node.js 24.21.0, npm 11.19.0 and MySQL 8.
 Run in the repository root:
 
 ```bash
-for dir in green-api green-dapp green-dummy green-erc; do
+for dir in api web simulator contracts; do
   (cd "$dir" && npm ci)
 done
-cp green-api/.env.example green-api/.env
-cp green-dapp/.env.local.example green-dapp/.env.local
+cp api/.env.example api/.env
+cp web/.env.local.example web/.env.local
 ```
 
-Start MySQL and configure DB_HOST, DB_PORT, DB_USER, DB_PASSWORD and DB_NAME in green-api/.env. Import the schema (the command below requires a MySQL client):
+Start MySQL and configure DB_HOST, DB_PORT, DB_USER, DB_PASSWORD and DB_NAME in api/.env. Import the schema (the command below requires a MySQL client):
 
 ```bash
-mysql -u root -p < green-api/sql/init.sql
+mysql -u root -p < api/sql/init.sql
 ```
 
 The schema creates green_commute. Backend startup creates some additional tables, but does not replace schema import.
@@ -40,18 +40,18 @@ The schema creates green_commute. Backend startup creates some additional tables
 Start each service in a separate terminal:
 
 ```bash
-cd green-api
+cd api
 npm run dev
 ```
 
 ```bash
-cd green-dapp
+cd web
 npm run dev -- --webpack --port 3000
 ```
 
 ```bash
 # Optional synthetic-event control panel
-cd green-dummy
+cd simulator
 npm run dev -- --port 3002
 ```
 
@@ -66,11 +66,11 @@ The first registered /health handler only proves that the HTTP process is alive;
 
 ## Blockchain configuration
 
-For the local contract/API flow, start a node in green-erc, then deploy from a second terminal:
+For the local contract/API flow, start a node in contracts, then deploy from a second terminal:
 
 ```bash
 npm run node
-# Separate terminal in green-erc:
+# Separate terminal in contracts:
 npm run deploy:localhost
 ```
 
@@ -84,7 +84,7 @@ Set these backend values and restart the API:
 
 A new local chain requires redeployment. The deploy script compiles the contracts; generated artifacts are not stored in Git.
 
-The frontend currently configures Sepolia directly in green-dapp/lib/wagmiConfig.js, with an Alchemy RPC. Setting NEXT_PUBLIC_CHAIN_ID alone does not switch the network. To use a local wallet end to end, adapt the frontend chain and transport configuration. For Sepolia, configure corresponding deployed contracts, backend RPC/oracle values and NEXT_PUBLIC_ALCHEMY_API_KEY. Leave NEXT_PUBLIC_AA_ENABLED=false unless intentionally configuring embedded Alchemy accounts.
+The frontend currently configures Sepolia directly in web/lib/wagmiConfig.js, with an Alchemy RPC. Setting NEXT_PUBLIC_CHAIN_ID alone does not switch the network. To use a local wallet end to end, adapt the frontend chain and transport configuration. For Sepolia, configure corresponding deployed contracts, backend RPC/oracle values and NEXT_PUBLIC_ALCHEMY_API_KEY. Leave NEXT_PUBLIC_AA_ENABLED=false unless intentionally configuring embedded Alchemy accounts.
 
 ## Verification and known limitations
 

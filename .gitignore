@@ -19,9 +19,9 @@ build/
 next-env.d.ts
 
 # Solidity outputs (regenerate with npm run compile)
-/green-erc/artifacts/
-/green-erc/cache/
-/green-erc/typechain-types/
+/contracts/artifacts/
+/contracts/cache/
+/contracts/typechain-types/
 
 # Test reports
 coverage/
