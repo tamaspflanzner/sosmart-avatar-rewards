@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { useAccount, useChainId, usePublicClient, useSwitchChain, useWalletClient } from "wagmi";
-import { hardhat } from "wagmi/chains";
+import { useChainId, usePublicClient, useSwitchChain, useWalletClient } from "wagmi";
+import { appChain } from "../../lib/chainConfig";
 import { useWallet } from "../../lib/useWallet";
 import Nav from "../components/Nav";
 import AvatarShowcase from "../components/AvatarShowcase";
@@ -16,7 +16,7 @@ function CommunityPageInner() {
   const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
   const { data: walletClient } = useWalletClient();
-  const publicClient = usePublicClient({ chainId: hardhat.id });
+  const publicClient = usePublicClient({ chainId: appChain.id });
   const [mounted, setMounted] = useState(false);
   const [activeSection, setActiveSection] = useState("social");
   const [data, setData] = useState(null);
@@ -390,7 +390,7 @@ function CommunityPageInner() {
     setSocialMessage("");
     try {
       const rewards = await apiGet(`/api/users/${address}/rewards`);
-      const targetChainId = Number(rewards?.chainId || hardhat.id);
+      const targetChainId = Number(rewards?.chainId || appChain.id);
 
       if (chainId !== targetChainId) {
         if (!switchChainAsync) {
@@ -403,7 +403,7 @@ function CommunityPageInner() {
         account: walletClient.account,
         to: rewards?.burnAddress,
         value: 0n,
-        chain: hardhat,
+        chain: appChain,
       });
 
       const receipt = await publicClient.waitForTransactionReceipt({

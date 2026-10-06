@@ -1,5 +1,7 @@
 "use client";
 
+import CosmeticImage from "../components/CosmeticImage";
+
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useDisconnect } from "wagmi";
@@ -326,7 +328,7 @@ export default function ProfilePage() {
               </button>
               {qrMessage ? <div className="small" style={{ marginTop: 6 }}>{qrMessage}</div> : null}
             </div>
-            <img src={qrImageUrl} alt="Friend invite QR" className="profile-qr-img" />
+            <CosmeticImage src={qrImageUrl} alt="Friend invite QR" className="profile-qr-img" />
           </div>
         ) : null}
       </div>

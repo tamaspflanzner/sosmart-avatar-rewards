@@ -181,13 +181,18 @@ function ChatPageInner() {
     };
   }, [walletReady, address, selectedEntry]);
 
+  const selectedThreadKey = selectedEntry?.threadKey;
+  const selectedThreadType = selectedEntry?.threadType;
+  const selectedGroupId = selectedEntry?.id;
+  const selectedWalletAddress = selectedEntry?.walletAddress;
+
   useEffect(() => {
-    if (!walletReady || !selectedEntry) return;
-    if (selectedEntry.threadType === "group") {
-      apiPost(`/api/groups/${selectedEntry.id}/messages/read`, { walletAddress: address })
+    if (!walletReady || !selectedThreadKey) return;
+    if (selectedThreadType === "group") {
+      apiPost(`/api/groups/${selectedGroupId}/messages/read`, { walletAddress: address })
         .then((json) => {
           setGroups((prev) =>
-            prev.map((entry) => (Number(entry.id) === Number(selectedEntry.id) ? { ...entry, unreadCount: 0 } : entry))
+            prev.map((entry) => (Number(entry.id) === Number(selectedGroupId) ? { ...entry, unreadCount: 0 } : entry))
           );
           if (Array.isArray(json?.groups)) {
             setGroups((json.groups || []).map((group) => ({ ...group, threadType: "group", threadKey: `group:${group.id}` })));
@@ -196,18 +201,18 @@ function ChatPageInner() {
         .catch(() => {});
       return;
     }
-    apiPost(`/api/users/${address}/direct-messages/${selectedEntry.walletAddress}/read`, {})
+    apiPost(`/api/users/${address}/direct-messages/${selectedWalletAddress}/read`, {})
       .then(() => {
         setConversations((prev) =>
           prev.map((entry) =>
-            normalizeWallet(entry.walletAddress) === normalizeWallet(selectedEntry.walletAddress)
+            normalizeWallet(entry.walletAddress) === normalizeWallet(selectedWalletAddress)
               ? { ...entry, unreadCount: 0 }
               : entry
           )
         );
       })
       .catch(() => {});
-  }, [walletReady, address, selectedEntry?.threadKey]);
+  }, [walletReady, address, selectedThreadKey, selectedThreadType, selectedGroupId, selectedWalletAddress]);
 
   useEffect(() => {
     const node = listRef.current;
@@ -726,16 +731,7 @@ const chatCardFrame = {
   overflow: "hidden",
 };
 
-const textInput = {
-  width: "100%",
-  borderRadius: 14,
-  border: "1px solid rgba(255,255,255,.12)",
-  background: "rgba(255,255,255,.05)",
-  color: "rgba(255,255,255,.96)",
-  padding: "10px 14px",
-  outline: "none",
-  fontSize: 14,
-};
+
 
 const conversationList = {
   display: "grid",
@@ -747,35 +743,11 @@ const conversationList = {
   paddingRight: 4,
 };
 
-const conversationCard = {
-  display: "grid",
-  gridTemplateColumns: "72px 1fr",
-  gap: 12,
-  alignItems: "center",
-  width: "100%",
-  borderRadius: 20,
-  padding: 12,
-  border: "1px solid rgba(255,255,255,.08)",
-  background: "rgba(255,255,255,.03)",
-  color: "inherit",
-  cursor: "pointer",
-};
 
-const activeConversationCard = {
-  ...conversationCard,
-  border: "1px solid rgba(34,211,238,.42)",
-  background: "linear-gradient(180deg, rgba(34,211,238,.16), rgba(255,255,255,.05))",
-  boxShadow: "0 10px 24px rgba(34,211,238,.10)",
-};
 
-const conversationPreview = {
-  marginTop: 6,
-  fontSize: 13,
-  opacity: 0.85,
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
-};
+
+
+
 
 const sidebarLabel = {
   marginTop: 16,
@@ -920,27 +892,9 @@ const emojiChip = {
   lineHeight: 1,
 };
 
-const unreadBadge = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "2px 8px",
-  borderRadius: 999,
-  background: "rgba(34,211,238,.16)",
-  border: "1px solid rgba(34,211,238,.35)",
-  color: "rgba(220,250,255,.98)",
-  fontSize: 11,
-  fontWeight: 900,
-};
 
-const emptyChatState = {
-  display: "grid",
-  placeItems: "center",
-  textAlign: "center",
-  alignContent: "center",
-  minHeight: 320,
-  padding: 24,
-};
+
+
 
 const EMOJI_OPTIONS = [
   "😀",

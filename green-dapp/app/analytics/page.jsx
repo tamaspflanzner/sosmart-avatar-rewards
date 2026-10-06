@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useWallet } from "../../lib/useWallet";
 import Nav from "../components/Nav";
 import { apiGet, fmt } from "../lib/api";
@@ -26,7 +26,7 @@ export default function AnalyticsPage() {
   const [windowSize, setWindowSize] = useState(720);
 
   const [series, setSeries] = useState(null);
-  const [method, setMethod] = useState(null);
+  const [, setMethod] = useState(null);
   const [modes, setModes] = useState(null);
   const [peak, setPeak] = useState(null);
   const [summary, setSummary] = useState(null);
@@ -36,7 +36,7 @@ export default function AnalyticsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
-  async function load({ silent = false } = {}) {
+  const load = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoading(true);
     else setRefreshing(true);
 
@@ -80,15 +80,15 @@ export default function AnalyticsPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  }
-
-  useEffect(() => {
-    load();
-    const t = setInterval(() => load({ silent: true }), 5000);
-    return () => clearInterval(t);
   }, [bucket, windowSize, scope, address, isConnected]);
 
-  const points = series?.points || [];
+  useEffect(() => {
+    const initial = setTimeout(() => load(), 0);
+    const timer = setInterval(() => load({ silent: true }), 5000);
+    return () => { clearTimeout(initial); clearInterval(timer); };
+  }, [load]);
+
+  const points = useMemo(() => series?.points || [], [series?.points]);
   const labels = useMemo(() => points.map((p) => toTimeLabel(p.t, bucket)), [points, bucket]);
 
   const totals = useMemo(() => {
@@ -474,18 +474,19 @@ function Donut({ segments, colors, size = 180 }) {
   const r = size * 0.34;
   const stroke = size * 0.12;
   const C = 2 * Math.PI * r;
-  let offset = 0;
 
   return (
     <svg width={size} height={size} style={{ display: "block" }}>
       <circle cx={cx} cy={cy} r={r} stroke="var(--chart-axis)" strokeWidth={stroke} fill="none" />
 
-      {segments.map((s) => {
+      {segments.map((s, index) => {
         const pct = Math.max(0, Number(s.value) || 0);
         const len = (pct / 100) * C;
         const dasharray = `${len} ${C - len}`;
-        const dashoffset = -offset;
-        offset += len;
+        const precedingShare = segments.slice(0, index).reduce(
+          (sum, segment) => sum + Math.max(0, Number(segment.value) || 0), 0
+        );
+        const dashoffset = -(precedingShare / 100) * C;
 
         return (
           <circle
@@ -616,4 +617,3 @@ const pillBtn = {
   color: "var(--ui-soft-text)",
   cursor: "pointer",
 };
-

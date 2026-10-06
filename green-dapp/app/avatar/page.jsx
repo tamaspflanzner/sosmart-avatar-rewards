@@ -1,8 +1,10 @@
 "use client";
 
+import CosmeticImage from "../components/CosmeticImage";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { encodeFunctionData } from "viem";
-import { sepolia } from "wagmi/chains";
+import { appChain } from "../../lib/chainConfig";
 import { useChainId, usePublicClient, useSwitchChain, useWalletClient } from "wagmi";
 import { useWallet } from "../../lib/useWallet";
 import Nav from "../components/Nav";
@@ -106,7 +108,7 @@ export default function AvatarPage() {
   const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
   const { data: walletClient } = useWalletClient();
-  const publicClient = usePublicClient({ chainId: sepolia.id });
+  const publicClient = usePublicClient({ chainId: appChain.id });
 
   const [mounted, setMounted] = useState(false);
   const [items, setItems] = useState([]);
@@ -115,8 +117,8 @@ export default function AvatarPage() {
   const [activeDragSlot, setActiveDragSlot] = useState(null);
   const [activeWardrobeSlot, setActiveWardrobeSlot] = useState("wallpaper");
   const [expandedOffsetSlot, setExpandedOffsetSlot] = useState(null);
-  const [storageStatus, setStorageStatus] = useState("loading");
-  const [layoutMessage, setLayoutMessage] = useState("");
+  const [, setStorageStatus] = useState("loading");
+  const [, setLayoutMessage] = useState("");
   const [stageSize, setStageSize] = useState(560);
   const [outfitPresets, setOutfitPresets] = useState([]);
   const [presetName, setPresetName] = useState("");
@@ -335,7 +337,7 @@ export default function AvatarPage() {
     };
   }, []);
 
-  const equipped = inv?.equipped || {};
+  const equipped = useMemo(() => inv?.equipped || {}, [inv?.equipped]);
   const offsets = inv?.offsets || {};
   const character = equipped.character || "girl";
   const filteredItems = useMemo(
@@ -579,7 +581,7 @@ export default function AvatarPage() {
           abi: greenCommuteCosmeticsAbi,
           functionName: "safeTransferFrom",
           args: [address, recipient, BigInt(cosmeticToken.tokenId), 1n, "0x"],
-          chain: sepolia,
+          chain: appChain,
         });
       }
 
@@ -746,7 +748,7 @@ export default function AvatarPage() {
               onPointerCancel={onGlobalHandlePointerUp}
             >
               {wallpaperItem?.image ? (
-                <img
+                <CosmeticImage
                   src={wallpaperItem.image}
                   alt=""
                   draggable={false}
@@ -982,7 +984,7 @@ export default function AvatarPage() {
                   return (
                     <div key={it.id} className="shop-item">
                       <div className="shop-img">
-                        <img
+                        <CosmeticImage
                           src={it.image}
                           alt={it.name}
                           onError={(e) => {
@@ -1183,7 +1185,7 @@ function Layer({ slot, src, item, getOffset, zIndex = 1 }) {
         zIndex,
       }}
     >
-      <img
+      <CosmeticImage
         src={src}
         alt=""
         className="avatar-layer"
@@ -1267,15 +1269,7 @@ const btnReset = {
   fontSize: 12,
 };
 
-const slotTab = {
-  background: "var(--ui-soft-bg)",
-  color: "var(--ui-soft-text)",
-  border: "1px solid var(--ui-soft-border)",
-  padding: "8px 12px",
-  borderRadius: 999,
-  cursor: "pointer",
-  fontWeight: 900,
-};
+
 
 const miniPanel = {
   borderRadius: 18,

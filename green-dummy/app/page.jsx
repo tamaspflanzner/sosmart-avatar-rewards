@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4100";
+
+async function fetchStatus(signal) {
+  const response = await fetch(`${API}/api/dummy/status`, { signal });
+  if (!response.ok) throw new Error(`Status request failed (${response.status})`);
+  return response.json();
+}
 
 function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
 
@@ -12,22 +18,27 @@ export default function DummyControl() {
   const [maxSec, setMaxSec] = useState(20);
   const [error, setError] = useState("");
 
+  const applyStatus = useCallback((s) => {
+    setStatus(s);
+    setMinSec(Math.round((s.minMs ?? 5000) / 1000));
+    setMaxSec(Math.round((s.maxMs ?? 20000) / 1000));
+    setError("");
+  }, []);
+
   async function refresh() {
-    try {
-      const s = await fetch(`${API}/api/dummy/status`).then(r => r.json());
-      setStatus(s);
-      setMinSec(Math.round((s.minMs ?? 5000) / 1000));
-      setMaxSec(Math.round((s.maxMs ?? 20000) / 1000));
-    } catch (e) {
-      setError(String(e));
-    }
+    try { applyStatus(await fetchStatus()); }
+    catch (e) { setError(String(e)); }
   }
 
   useEffect(() => {
-    refresh();
-    const t = setInterval(refresh, 2000);
-    return () => clearInterval(t);
-  }, []);
+    const controller = new AbortController();
+    const poll = () => fetchStatus(controller.signal)
+      .then((s) => { if (!controller.signal.aborted) applyStatus(s); })
+      .catch((e) => { if (!controller.signal.aborted) setError(String(e)); });
+    poll();
+    const timer = setInterval(poll, 2000);
+    return () => { controller.abort(); clearInterval(timer); };
+  }, [applyStatus]);
 
   async function start() {
     setError("");

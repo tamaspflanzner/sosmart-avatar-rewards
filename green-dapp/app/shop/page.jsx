@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import CosmeticImage from "../components/CosmeticImage";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { encodeFunctionData, parseUnits } from "viem";
-import { sepolia } from "wagmi/chains";
+import { appChain } from "../../lib/chainConfig";
 import { useChainId, usePublicClient, useSwitchChain, useWalletClient } from "wagmi";
 import { useWallet } from "../../lib/useWallet";
 import { addOwned, isOwned, loadInventory, saveInventory } from "../lib/inventory";
@@ -131,7 +133,7 @@ export default function ShopPage() {
   const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
   const { data: walletClient } = useWalletClient();
-  const publicClient = usePublicClient({ chainId: sepolia.id });
+  const publicClient = usePublicClient({ chainId: appChain.id });
 
   const [mounted, setMounted] = useState(false);
   const [items, setItems] = useState([]);
@@ -180,7 +182,7 @@ export default function ShopPage() {
     setRewards(json);
   }
 
-  async function syncInventoryFromApi(addr) {
+  const syncInventoryFromApi = useCallback(async (addr) => {
     const json = await fetchJson(`${API}/api/users/${addr}/inventory`, { cache: "no-store" });
 
     const local = loadInventory(addressKey);
@@ -190,7 +192,7 @@ export default function ShopPage() {
 
     saveInventory(addressKey, merged);
     setInv(merged);
-  }
+  }, [addressKey]);
 
   async function loadTradeHub(addr) {
     const query = addr ? `?wallet=${encodeURIComponent(addr)}` : "";
@@ -240,7 +242,7 @@ export default function ShopPage() {
         viewerTradeApproved: false,
       });
     }
-  }, [isConnected, address, addressKey]);
+  }, [isConnected, address, addressKey, syncInventoryFromApi]);
 
   const available = rewards?.spendableTokensOnChain ?? rewards?.onChainBalanceTokens ?? null;
   const grouped = useMemo(() => groupBySlot(items), [items]);
@@ -342,7 +344,7 @@ export default function ShopPage() {
 
     setBuyBusy(item.id);
     try {
-      const targetChainId = Number(rewards.chainId || sepolia.id);
+      const targetChainId = Number(rewards.chainId || appChain.id);
       if (!isEmbedded && chainId !== targetChainId) {
         await switchChainAsync({ chainId: targetChainId });
       }
@@ -369,7 +371,7 @@ export default function ShopPage() {
           abi: greenCommuteTokenAbi,
           functionName: "transfer",
           args: [rewards.burnAddress, amountWei],
-          chain: sepolia,
+          chain: appChain,
         });
         // confirmations: 0 = just wait for inclusion, skip extra block
         const burnReceipt = await publicClient.waitForTransactionReceipt({
@@ -559,7 +561,7 @@ export default function ShopPage() {
     setErr("");
     setSuccess("");
     try {
-      const targetChainId = Number(tradeHub.cosmeticsChainId || rewards?.chainId || sepolia.id);
+      const targetChainId = Number(tradeHub.cosmeticsChainId || rewards?.chainId || appChain.id);
       if (!isEmbedded && chainId !== targetChainId) {
         await switchChainAsync({ chainId: targetChainId });
       }
@@ -582,7 +584,7 @@ export default function ShopPage() {
           abi: greenCommuteCosmeticsAbi,
           functionName: "setApprovalForAll",
           args: [tradeHub.tradeOperatorAddress, true],
-          chain: sepolia,
+          chain: appChain,
         });
       }
       const receipt = await publicClient.waitForTransactionReceipt({
@@ -603,11 +605,7 @@ export default function ShopPage() {
     }
   }
 
-  const walletLabel = mounted
-    ? isConnected && address
-      ? address
-      : "Not connected (guest inventory)"
-    : "Loading wallet...";
+
 
   return (
     <div className="shell">
@@ -706,13 +704,13 @@ export default function ShopPage() {
               <div className="shop-grid">
                 {(grouped[slot] || []).map((it) => {
                   const owned = inv ? isOwned(inv, it.id) : false;
-                  const characterLocked = false;
+
                   const cosmeticToken = getCosmeticToken(it.id);
 
                   return (
                     <div key={it.id} className="shop-item">
                       <div className="shop-img" style={{ position: "relative" }}>
-                        <img
+                        <CosmeticImage
                           src={it.image}
                           alt={it.name}
                           onError={(e) => {
@@ -844,7 +842,7 @@ export default function ShopPage() {
                           className={selected ? "trade-picker-card trade-picker-card--selected" : "trade-picker-card"}
                         >
                           <div style={tradeThumbWrap}>
-                            <img
+                            <CosmeticImage
                               src={item.image}
                               alt={item.name}
                               style={tradeThumb}
@@ -898,7 +896,7 @@ export default function ShopPage() {
                         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
                           {listing.item?.image ? (
                             <div style={tradeThumbWrap}>
-                              <img
+                              <CosmeticImage
                                 src={listing.item.image}
                                 alt={listing.item?.name || listing.itemId}
                                 style={tradeThumb}
@@ -942,7 +940,7 @@ export default function ShopPage() {
                                     className={selected ? "trade-picker-card trade-picker-card--selected" : "trade-picker-card"}
                                   >
                                     <div style={tradeThumbWrap}>
-                                      <img
+                                      <CosmeticImage
                                         src={item.image}
                                         alt={item.name}
                                         style={tradeThumb}
@@ -997,7 +995,7 @@ export default function ShopPage() {
                       <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
                         {listing.item?.image ? (
                           <div style={tradeThumbWrap}>
-                            <img
+                            <CosmeticImage
                               src={listing.item.image}
                               alt={listing.item?.name || listing.itemId}
                               style={tradeThumb}
@@ -1037,7 +1035,7 @@ export default function ShopPage() {
                             <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
                               {offer.offeredItem?.image ? (
                                 <div style={tradeThumbWrap}>
-                                  <img
+                                  <CosmeticImage
                                     src={offer.offeredItem.image}
                                     alt={offer.offeredItem?.name || offer.offeredItemId}
                                     style={tradeThumb}
@@ -1097,7 +1095,7 @@ export default function ShopPage() {
                         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
                           {offer.offeredItem?.image ? (
                             <div style={tradeThumbWrap}>
-                              <img
+                              <CosmeticImage
                                 src={offer.offeredItem.image}
                                 alt={offer.offeredItem?.name || offer.offeredItemId}
                                 style={tradeThumb}
@@ -1143,7 +1141,7 @@ export default function ShopPage() {
                       <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
                         {entry.image ? (
                           <div style={tradeThumbWrap}>
-                            <img
+                            <CosmeticImage
                               src={entry.image}
                               alt={entry.title}
                               style={tradeThumb}
@@ -1194,24 +1192,9 @@ const tradeInput = {
   outline: "none",
 };
 
-const tradeCard = {
-  borderRadius: 18,
-  border: "1px solid rgba(255,255,255,.10)",
-  background: "rgba(255,255,255,.03)",
-  padding: 14,
-};
 
-const tradeOfferCard = {
-  borderRadius: 14,
-  border: "1px solid rgba(255,255,255,.08)",
-  background: "rgba(255,255,255,.025)",
-  padding: 12,
-  display: "flex",
-  justifyContent: "space-between",
-  gap: 12,
-  flexWrap: "wrap",
-  alignItems: "center",
-};
+
+
 
 const tradePickerGrid = {
   display: "grid",
@@ -1219,18 +1202,7 @@ const tradePickerGrid = {
   gap: 12,
 };
 
-const tradeSelectableCard = {
-  display: "flex",
-  alignItems: "center",
-  gap: 12,
-  width: "100%",
-  borderRadius: 16,
-  border: "1px solid rgba(255,255,255,.10)",
-  background: "rgba(255,255,255,.035)",
-  padding: 12,
-  color: "rgba(255,255,255,.96)",
-  cursor: "pointer",
-};
+
 
 const tradeThumbWrap = {
   width: 72,

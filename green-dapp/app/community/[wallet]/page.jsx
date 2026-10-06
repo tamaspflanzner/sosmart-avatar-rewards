@@ -372,7 +372,7 @@ export default function CommunityProfilePage({ params }) {
                   </div>
                 </div>
 
-                
+
               </div>
             )}
           </div>
@@ -423,17 +423,4 @@ const groupGlyph = {
   fontSize: 22,
   border: "1px solid rgba(255,255,255,.08)",
   background: "linear-gradient(180deg, rgba(34,211,238,.14), rgba(16,185,129,.12))",
-};
-
-const miniStatCard = {
-  borderRadius: 14,
-  padding: 12,
-  border: "1px solid rgba(255,255,255,.08)",
-  background: "rgba(255,255,255,.03)",
-};
-
-const miniStatValue = {
-  fontWeight: 900,
-  fontSize: 20,
-  marginTop: 4,
 };

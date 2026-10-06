@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { encodeFunctionData } from "viem";
 import { useChainId, usePublicClient, useSwitchChain, useWalletClient } from "wagmi";
-import { sepolia } from "wagmi/chains";
+import { appChain } from "../lib/chainConfig";
 import { useWallet } from "../lib/useWallet";
 import {
   createAlchemyClaimClient,
@@ -47,7 +47,7 @@ export default function ClaimOnChainButton({ claim, onDone }) {
   const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
   const { data: walletClient } = useWalletClient();
-  const publicClient = usePublicClient({ chainId: sepolia.id });
+  const publicClient = usePublicClient({ chainId: appChain.id });
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -128,7 +128,7 @@ export default function ClaimOnChainButton({ claim, onDone }) {
           abi: greenCommuteTokenAbi,
           functionName: "claimReward",
           args: claimArgs,
-          chain: sepolia,
+          chain: appChain,
         });
       }
 

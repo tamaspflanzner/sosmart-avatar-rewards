@@ -1,5 +1,7 @@
 "use client";
 
+import CosmeticImage from "./CosmeticImage";
+
 import { useEffect, useMemo, useState } from "react";
 import {
   AVATAR_BACKGROUND_SLOT,
@@ -25,7 +27,7 @@ export default function AvatarShowcase({
   }, []);
 
   const character = layout?.character || layout?.equipped?.character || "girl";
-  const equipped = layout?.equipped || {};
+  const equipped = useMemo(() => layout?.equipped || {}, [layout?.equipped]);
   const offsets = layout?.offsets || {};
 
   const itemMap = useMemo(() => new Map(items.map((it) => [it.id, it])), [items]);
@@ -74,7 +76,7 @@ export default function AvatarShowcase({
       }}
     >
       {wallpaperItem?.image ? (
-        <img
+        <CosmeticImage
           src={wallpaperItem.image}
           alt=""
           draggable={false}
@@ -109,7 +111,7 @@ export default function AvatarShowcase({
               zIndex: layer.z,
             }}
           >
-            <img
+            <CosmeticImage
               src={layer.src}
               alt=""
               draggable={false}

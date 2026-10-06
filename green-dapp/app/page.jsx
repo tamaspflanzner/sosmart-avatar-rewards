@@ -50,7 +50,7 @@ export default function Home() {
     return () => clearInterval(t);
   }, []);
 
-  const byType = summary?.tripsByType || {};
+  const byType = useMemo(() => summary?.tripsByType || {}, [summary?.tripsByType]);
   const top = leaderboard?.top || [];
   const events = recentEvents?.events || [];
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useContext } from "react";
 import { useAccount as useWagmiAccount } from "wagmi";
 import {
   useAccount as useAlchemyAccount,
@@ -10,91 +10,64 @@ import {
   useSmartAccountClient,
   useUser,
 } from "@account-kit/react";
+import { useHydrated } from "./useHydrated";
 
-const AA_ENABLED = ["1", "true", "yes"].includes(
+export const AA_ENABLED = ["1", "true", "yes"].includes(
   String(process.env.NEXT_PUBLIC_AA_ENABLED || "").toLowerCase()
 );
+const noAction = () => {};
+const defaultEmbedded = {
+  address: null,
+  isConnected: false,
+  smartClient: null,
+  isLoadingWallet: false,
+  embeddedEmail: null,
+  openEmbeddedAuthModal: noAction,
+  logoutEmbedded: async () => {},
+};
+const EmbeddedWalletContext = createContext(defaultEmbedded);
 
-/**
- * Unified wallet hook.
- * - EOA / injected wallet comes from wagmi
- * - Embedded / Account Kit wallet comes from Account Kit hooks
- */
-export function useWallet() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const wagmi = useWagmiAccount();
-
-  const authModal = AA_ENABLED ? useAuthModal() : { openAuthModal: () => {} };
-  const logoutApi = AA_ENABLED ? useLogout() : { logout: async () => {} };
-  const signerStatus = AA_ENABLED
-    ? useSignerStatus()
-    : { isConnected: false, isAuthenticating: false, isInitializing: false };
-  const user = AA_ENABLED ? useUser() : null;
-  const alchemyAccount = AA_ENABLED
-    ? useAlchemyAccount({ type: "LightAccount", skipCreate: !signerStatus.isConnected })
-    : { address: undefined, isLoadingAccount: false };
-  const { client: smartWalletClient } = AA_ENABLED ? useSmartAccountClient({ type: "LightAccount" }) : { client: null };
-
-  if (!mounted) {
-    return {
-      address: undefined,
-      isConnected: false,
-      isEmbedded: false,
-      smartClient: null,
-      smartAddress: null,
-      isLoadingWallet: true,
-      embeddedEmail: null,
-      openEmbeddedAuthModal: () => {},
-      logoutEmbedded: async () => {},
-      aaEnabled: AA_ENABLED,
-    };
-  }
-
-  if (wagmi.isConnected && wagmi.address) {
-    return {
-      address: wagmi.address,
-      isConnected: true,
-      isEmbedded: false,
-      smartClient: null,
-      smartAddress: null,
-      isLoadingWallet: false,
-      embeddedEmail: null,
-      openEmbeddedAuthModal: authModal.openAuthModal,
-      logoutEmbedded: logoutApi.logout,
-      aaEnabled: AA_ENABLED,
-    };
-  }
-
-  if (AA_ENABLED && signerStatus.isConnected) {
-    const smartAddress = alchemyAccount?.address ?? null;
-    return {
-      address: smartAddress,
-      isConnected: Boolean(smartAddress),
-      isEmbedded: true,
-      smartClient: smartWalletClient ?? null,
-      smartAddress,
-      isLoadingWallet: Boolean(alchemyAccount?.isLoadingAccount && !smartAddress),
+// Only mounted inside AlchemyAccountProvider. Every Account Kit hook is called
+// unconditionally, while external-wallet-only mode never requires its provider.
+export function EmbeddedWalletProvider({ children }) {
+  const authModal = useAuthModal();
+  const logoutApi = useLogout();
+  const signerStatus = useSignerStatus();
+  const user = useUser();
+  const account = useAlchemyAccount({ type: "LightAccount", skipCreate: !signerStatus.isConnected });
+  const { client } = useSmartAccountClient({ type: "LightAccount" });
+  const address = signerStatus.isConnected ? account?.address ?? null : null;
+  return (
+    <EmbeddedWalletContext.Provider value={{
+      address,
+      isConnected: Boolean(address),
+      smartClient: signerStatus.isConnected ? client ?? null : null,
+      isLoadingWallet: Boolean(signerStatus.isConnected && account?.isLoadingAccount && !address),
       embeddedEmail: user?.email ?? null,
       openEmbeddedAuthModal: authModal.openAuthModal,
       logoutEmbedded: logoutApi.logout,
-      aaEnabled: AA_ENABLED,
-    };
-  }
+    }}>
+      {children}
+    </EmbeddedWalletContext.Provider>
+  );
+}
 
+export function useWallet() {
+  const mounted = useHydrated();
+  const wagmi = useWagmiAccount();
+  const embedded = useContext(EmbeddedWalletContext);
+  const externalConnected = mounted && wagmi.isConnected && Boolean(wagmi.address);
+  const isEmbedded = mounted && !externalConnected && AA_ENABLED;
   return {
-    address: undefined,
-    isConnected: false,
-    isEmbedded: false,
-    smartClient: null,
-    smartAddress: null,
-    isLoadingWallet: false,
-    embeddedEmail: null,
-    openEmbeddedAuthModal: authModal.openAuthModal,
-    logoutEmbedded: logoutApi.logout,
+    address: externalConnected ? wagmi.address : isEmbedded ? embedded.address : undefined,
+    isConnected: externalConnected || (isEmbedded && embedded.isConnected),
+    isEmbedded: Boolean(isEmbedded && (embedded.isConnected || embedded.isLoadingWallet)),
+    smartClient: isEmbedded ? embedded.smartClient : null,
+    smartAddress: isEmbedded ? embedded.address : null,
+    isLoadingWallet: !mounted || (isEmbedded && embedded.isLoadingWallet),
+    embeddedEmail: isEmbedded ? embedded.embeddedEmail : null,
+    openEmbeddedAuthModal: embedded.openEmbeddedAuthModal,
+    logoutEmbedded: embedded.logoutEmbedded,
     aaEnabled: AA_ENABLED,
   };
 }
