@@ -1,0 +1,59 @@
+# Dependencies and package manager caches
+node_modules/
+.pnp
+.pnp.*
+.npm/
+.yarn/*
+!.yarn/patches/
+!.yarn/plugins/
+!.yarn/releases/
+!.yarn/versions/
+
+# Next.js / build outputs
+.next/
+out/
+dist/
+build/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# Solidity outputs (regenerate with npm run compile)
+/green-erc/artifacts/
+/green-erc/cache/
+/green-erc/typechain-types/
+
+# Test reports
+coverage/
+playwright-report/
+test-results/
+
+# Local configuration; keep documented examples
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+.aws/
+
+# Logs and local databases
+*.log
+*.pid
+*.pid.lock
+*.sqlite
+*.sqlite3
+*.db
+/mysql-data/
+
+# Editor / OS files
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+*.swo
+*~
+
+# Local export archives
+*.zip
+*.tar.gz

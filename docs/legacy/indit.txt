@@ -1,0 +1,69 @@
+GREEN COMMUTE - INDITASI LEPESEK (ERC-20 CLAIM FLOW)
+
+0) Elso alkalommal (egyszer):
+cd D:\gyakorlat\green-commute\green-dummy
+npm run dev
+
+cd D:\gyakorlat\green-commute\green-api
+npm run dev
+
+cd D:\gyakorlat\green-commute\green-dapp
+npm run dev
+
+
+1) Hardhat local blockchain inditasa (kulon terminal):
+cd D:\gyakorlat\green-commute\green-erc
+npx hardhat node
+
+
+2) Contract deploy localhostra (kulon terminal, ha uj node indult):
+cd D:\gyakorlat\green-commute\green-erc
+npx hardhat run scripts/deploy.js --network localhost
+
+Megjegyzes:
+- A deploy kiirja a contract cimet.
+- Ezt ird be a green-api/.env-be a GCT_* mezokhoz.
+
+
+3) Backend (green-api) inditasa:
+cd D:\gyakorlat\green-commute\green-api
+npm run dev
+
+Ellenorizd a green-api/.env-ben:
+GCT_CONTRACT_ADDRESS=0x5fbdb2315678afecb367f032d93f642f64180aa3
+GCT_CHAIN_ID=31337
+GCT_RPC_URL=http://127.0.0.1:8545
+GCT_ORACLE_PRIVATE_KEY=<LOCAL_HARDHAT_TEST_PRIVATE_KEY>
+GCT_CLAIM_EXPIRY_SECONDS=3600
+
+
+4) Frontend (green-dapp) inditasa:
+cd D:\gyakorlat\green-commute\green-dapp
+rmdir /s /q .next
+npm run dev
+
+Frontend env (ha kell):
+NEXT_PUBLIC_API_URL=http://localhost:4100
+
+
+5) MetaMask beallitas:
+- Network: Localhost 8545
+- Chain ID: 31337
+- Importald a Hardhat accountot (demo): 
+  private key: <LOCAL_HARDHAT_TEST_PRIVATE_KEY>
+
+
+6) On-chain claim teszt flow:
+1. Dashboard/Profile oldalon legyen claimelheto reward.
+2. Profile claim historyben: "Claim on-chain".
+3. A dapp meghivja: POST /api/claims/:id/sign
+4. Wallet elkuldi a claimReward(...) tx-et.
+5. Tx utan backend confirm: POST /api/claims/:id/confirm
+6. Claim status: confirmed + tx_hash mentve.
+
+
+7) Inditasi sorrend roviden:
+1. npx hardhat node (green-erc)
+2. deploy (ha kell) (green-erc)
+3. npm run dev (green-api)
+4. npm run dev (green-dapp)

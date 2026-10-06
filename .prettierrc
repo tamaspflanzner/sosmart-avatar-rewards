@@ -1,0 +1,6 @@
+{
+    "printWidth":111,
+    "tabWidth": 2,
+    "singleAttributePerLine": false,
+    "bracketSameLine": false
+}
