@@ -1,0 +1,24 @@
+{
+  "name": "sosmart-avatar-rewards",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Blockchain commuting rewards and an avatar cosmetics marketplace.",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "install:all": "node scripts/install-all.cjs",
+    "dev:api": "npm --prefix api run dev",
+    "dev:web": "npm --prefix web run dev",
+    "dev:simulator": "npm --prefix simulator run dev",
+    "chain": "npm --prefix contracts run node",
+    "deploy:local": "npm --prefix contracts run deploy:localhost",
+    "lint": "npm --prefix web run lint -- --max-warnings=0 && npm --prefix simulator run lint -- --max-warnings=0",
+    "test": "npm --prefix api test && npm --prefix contracts test",
+    "test:integration": "npm --prefix api run test:integration",
+    "test:e2e": "node --test tests/e2e.test.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.58.2"
+  }
+}
