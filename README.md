@@ -4,6 +4,27 @@ Earn blockchain rewards through sustainable commuting and redeem them for avatar
 
 Travel events earn rewards that users claim as GCT tokens on chain. The in-app shop exchanges those tokens for ERC-1155 avatar clothing, accessories and backgrounds. Profiles, friends, group challenges and chat connect riders. Avatar upgrades change appearance, not character statistics.
 
+## App preview
+
+These screenshots retain the earlier **Green Commute** branding. Avatar appearance and clothing/accessory placement were refined with AI for this showcase and may differ from the current in-app rendering.
+
+| Avatar profile | Token shop |
+| --- | --- |
+| [![Public profile with an AI-enhanced avatar, outfit and beach background](screenshots/public-profile-yui-arakaki.png)](screenshots/public-profile-yui-arakaki.png) | [![Shop with avatar backgrounds and headwear priced in GCT](screenshots/shop.png)](screenshots/shop.png) |
+
+<details>
+<summary>More screenshots: dashboard, analytics and community</summary>
+
+| Dashboard | Analytics |
+| --- | --- |
+| [![Dashboard showing journeys, estimated CO2 savings and rider rankings](screenshots/dashboard.png)](screenshots/dashboard.png) | [![Analytics showing journey history, estimated CO2 savings and transport modes](screenshots/analytics.png)](screenshots/analytics.png) |
+
+**Community leaderboard**
+
+[![Community leaderboard featuring riders and AI-enhanced avatar outfits](screenshots/community-leaderboard.png)](screenshots/community-leaderboard.png)
+
+</details>
+
 ## Repository structure
 
 | Directory | Responsibility | Main technologies |
